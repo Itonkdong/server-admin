@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+info() { section 'Server information'; printf 'Hostname: %s\nOS: %s\nKernel: %s\nCPU: %s\nMemory: %s\n' "$(hostname)" "$(. /etc/os-release; echo "$PRETTY_NAME")" "$(uname -r)" "$(nproc) cores" "$(free -h|awk '/Mem:/ {print $2}')"; echo 'Disk:'; df -h /; command -v nvidia-smi >/dev/null && nvidia-smi --query-gpu=name --format=csv,noheader || echo 'GPU: unavailable'; command -v docker >/dev/null && docker --version || echo 'Docker: unavailable'; systemctl is-active ssh tailscaled 2>/dev/null || true; echo 'Users:'; source "$SERVER_ADMIN_ROOT/lib/list_users.sh"; list_users; }

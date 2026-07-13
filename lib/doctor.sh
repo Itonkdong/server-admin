@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+doctor() { require_root; section 'Server health'; printf 'Ubuntu: '; grep -q 'Ubuntu' /etc/os-release && pass OK || warn 'not Ubuntu'; echo "Kernel: $(uname -r)"; echo "Hostname: $(hostname)"; ip -br addr show | head -5; curl -fsS --max-time 3 https://connectivitycheck.gstatic.com/generate_204 >/dev/null && pass Internet || warn Internet; systemctl is-active --quiet ssh && pass SSH || fail SSH; systemctl is-active --quiet tailscaled && pass Tailscale || fail Tailscale; command -v docker >/dev/null && pass Docker || warn 'Docker unavailable'; command -v nvidia-smi >/dev/null && nvidia-smi --query-gpu=name --format=csv,noheader || warn 'NVIDIA unavailable'; df -h /; free -h; ufw status 2>/dev/null | head -8 || warn UFW; }

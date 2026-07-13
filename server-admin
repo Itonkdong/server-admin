@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; export SERVER_ADMIN_ROOT="$ROOT"
+source "$ROOT/lib/common.sh"
+cmd=${1:-help}; shift || true
+case "$cmd" in
+ add-user) source "$ROOT/lib/add_user.sh"; add_user "$@";;
+ verify-user) source "$ROOT/lib/verify_user.sh"; verify_user "$@";;
+ remove-user) source "$ROOT/lib/remove_user.sh"; remove_user "$@";;
+ list-users) source "$ROOT/lib/list_users.sh"; list_users;;
+ show-keys) source "$ROOT/lib/show_keys.sh"; show_keys;;
+ doctor) source "$ROOT/lib/doctor.sh"; doctor;;
+ info) source "$ROOT/lib/info.sh"; info;;
+ version) echo "server-admin $APP_VERSION";;
+ help|-h|--help) cat <<'EOF'
+server-admin - Ubuntu GPU server administration
+
+Usage: server-admin <command> [options]
+  add-user [--username NAME] [--sudo|--no-sudo] [--key FILE]
+  verify-user [NAME]   remove-user [NAME]
+  list-users            show-keys
+  doctor                info
+  version               help
+EOF
+ ;;
+ *) fail "Unknown command: $cmd"; echo "Run 'server-admin help' for usage."; exit 2;;
+esac
