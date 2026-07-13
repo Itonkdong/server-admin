@@ -35,7 +35,9 @@ sudo ./install.sh
 
 ```text
 server-admin add-user [--username NAME] [--sudo|--no-sudo] [--key FILE]
+server-admin disable-cloud-init-ssh
 server-admin verify-user [NAME]
+server-admin verify-user --all
 server-admin remove-user [NAME]
 server-admin list-users
 server-admin show-keys
@@ -51,10 +53,16 @@ sudo server-admin add-user --username firstname.lastname --sudo --key ~/Download
 
 ## Commands
 
-- `add-user` creates a public-key-only user, optionally grants sudo, and safely updates `AllowUsers`.
-- `verify-user` checks the account, SSH files, effective `sshd -T` settings, and services.
-- `remove-user` deletes an account and removes it from `AllowUsers`.
-- `doctor` reports host health; `info` prints a concise inventory.
+- `add-user` creates a public-key-only user, optionally grants sudo, installs the supplied public key, and safely updates `AllowUsers`.
+- `disable-cloud-init-ssh` disables `/etc/ssh/sshd_config.d/50-cloud-init.conf` when present, so cloud-init does not override SSH policy.
+- `verify-user [NAME]` checks one account, its SSH files, effective `sshd -T` settings, and required services.
+- `verify-user --all` performs the same verification for every regular user (UID 1000–59999).
+- `remove-user [NAME]` confirms deletion, optionally removes the home directory, and removes the account from `AllowUsers`.
+- `list-users` displays regular usernames, UIDs, sudo membership, and login shells in a table.
+- `show-keys` displays each regular user’s authorized-key count and fingerprints using `ssh-keygen -lf`.
+- `doctor` checks Ubuntu, networking, internet access, SSH, port 22, Tailscale, Docker, CUDA/NVIDIA, storage, memory, and UFW.
+- `info` displays a labeled server inventory including OS, kernel, CPU, memory, disk, GPU, Docker, SSH, Tailscale, UFW, and users.
+- `help` displays the command summary; `version` displays the installed server-admin version.
 
 Create a user interactively:
 

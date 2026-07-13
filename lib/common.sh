@@ -19,32 +19,39 @@ key_is_valid() { [[ $1 =~ ^(ssh-ed25519|ssh-rsa|ecdsa-sha2-[^[:space:]]+|sk-ssh-
 effective() { sshd -T 2>/dev/null; }
 allow_user() { effective | awk -v u="$1" '$1=="allowusers" && $2==u { found=1 } END { exit !found }'; }
 ssh_update_allowusers() {
-  local user=$1 tmp backup line found=0
-  tmp=$(mktemp); backup="${SSH_CONFIG}.server-admin.$(date +%Y%m%d%H%M%S).bak"
-  cp -a "$SSH_CONFIG" "$backup"
-  while IFS= read -r line; do
-    if [[ $line =~ ^[[:space:]]*AllowUsers([[:space:]]|$) ]]; then
-      [[ $line =~ (^|[[:space:]])$user($|[[:space:]]) ]] && found=1
-      [[ $line =~ ^[[:space:]]*# ]] || line="$line $user"
-    fi
-    printf '%s\n' "$line" >> "$tmp"
-  done < "$SSH_CONFIG"
-  if (( ! found )); then printf '\nAllowUsers %s\n' "$user" >> "$tmp"; fi
-  install -m 0644 "$tmp" "$SSH_CONFIG"; rm -f "$tmp"
-  if ! sshd -t; then cp -a "$backup" "$SSH_CONFIG"; rm -f "$backup"; return 1; fi
-  systemctl reload ssh
+  ssh_rewrite_allowusers add "$1"
 }
 ssh_remove_allowuser() {
-  local user=$1 tmp line
-  tmp=$(mktemp)
+  ssh_rewrite_allowusers remove "$1"
+}
+ssh_rewrite_allowusers() {
+  local action=$1 user=$2 tmp backup line token
+  local -a users=() parts=()
+  declare -A seen=()
+  tmp=$(mktemp); backup="${SSH_CONFIG}.server-admin.$(date +%Y%m%d%H%M%S).bak"
+  cp -a "$SSH_CONFIG" "$backup"
+
   while IFS= read -r line; do
-    if [[ $line =~ ^[[:space:]]*AllowUsers[[:space:]] ]]; then
-      line=$(awk -v u="$user" '{ printf "%s", $1; for(i=2;i<=NF;i++) if($i!=u) printf " %s",$i; print "" }' <<<"$line")
+    if [[ $line =~ ^[[:space:]]*AllowUsers([[:space:]]|$) ]]; then
+      read -r -a parts <<< "$line"
+      for token in "${parts[@]:1}"; do
+        [[ -n ${seen[$token]+x} ]] || { users+=("$token"); seen[$token]=1; }
+      done
+      continue
     fi
     printf '%s\n' "$line" >> "$tmp"
   done < "$SSH_CONFIG"
+
+  if [[ $action == add && -z ${seen[$user]+x} ]]; then users+=("$user"); fi
+  if [[ $action == remove ]]; then
+    local -a remaining=()
+    for token in "${users[@]}"; do [[ $token != "$user" ]] && remaining+=("$token"); done
+    users=("${remaining[@]}")
+  fi
+  ((${#users[@]})) && printf '\nAllowUsers %s\n' "${users[*]}" >> "$tmp"
+
   install -m 0644 "$tmp" "$SSH_CONFIG"; rm -f "$tmp"
-  sshd -t || die 'SSH configuration became invalid; restore the latest server-admin backup.'
+  if ! sshd -t; then cp -a "$backup" "$SSH_CONFIG"; rm -f "$backup"; return 1; fi
   systemctl reload ssh
 }
 print_result() { if "$@"; then pass "$1"; return 0; else fail "$1"; return 1; fi; }
