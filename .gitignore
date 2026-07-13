@@ -1,0 +1,53 @@
+# IDE and editor metadata
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.fleet/
+.agents/
+.codex/
+
+# macOS, Windows, and Linux desktop files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor temporary files and swap files
+*~
+*.swp
+*.swo
+*.tmp
+.#*
+\#*\#
+
+# Shell and application logs
+*.log
+logs/
+
+# Local environment and secret files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Runtime and temporary files
+tmp/
+temp/
+*.pid
+*.retry
+
+# server-admin SSH configuration backups created during local testing
+sshd_config.server-admin.*.bak
+
+# Test and coverage output
+coverage/
+reports/

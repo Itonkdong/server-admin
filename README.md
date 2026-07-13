@@ -8,7 +8,7 @@ Small, modular administration utility for Ubuntu 24.04+ GPU servers.
 sudo apt update
 sudo apt install -y git openssh-server openssh-client curl ufw
 git clone https://github.com/itonkdong/server-setup-tools.git
-cd server-admin
+cd server-setup-tools
 sudo ./install.sh
 server-admin version
 ```
@@ -26,7 +26,7 @@ The installer copies the application to `/opt/server-admin` and creates
 `/usr/local/bin/server-admin`. Update an existing installation with:
 
 ```bash
-cd server-admin
+cd server-setup-tools
 git pull
 sudo ./install.sh
 ```
