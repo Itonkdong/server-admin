@@ -36,6 +36,7 @@ sudo ./install.sh
 ```text
 server-admin add-user [--username NAME] [--sudo|--no-sudo] [--key FILE]
 server-admin disable-cloud-init-ssh
+server-admin setup-ssh [OPTIONS]
 server-admin verify-user [NAME]
 server-admin verify-user --all
 server-admin remove-user [NAME]
@@ -55,6 +56,7 @@ sudo server-admin add-user --username firstname.lastname --sudo --key ~/Download
 
 - `add-user` creates a public-key-only user, optionally grants sudo, adds the user to the `docker` group when available, installs the supplied public key, and safely updates `AllowUsers`.
 - `disable-cloud-init-ssh` disables `/etc/ssh/sshd_config.d/50-cloud-init.conf` when present, so cloud-init does not override SSH policy.
+- `setup-ssh` generates or reuses an Ed25519 key for a Linux user, configures any remote SSH host or service, fixes ownership and permissions, and prints the public key and next steps.
 - `verify-user [NAME]` checks one account, its SSH files, effective `sshd -T` settings, and required services.
 - `verify-user --all` performs the same verification for every regular user (UID 1000–59999).
 - `remove-user [NAME]` confirms deletion, optionally removes the home directory, and removes the account from `AllowUsers`.
@@ -68,6 +70,64 @@ The Docker group grants access to the Docker daemon and is effectively
 root-equivalent. Only add users to this group if that level of access is
 intended. Users must log out and back in (or start a new login session) before
 their new group membership is available.
+
+### Configure outbound SSH access
+
+Run interactively as the local user who needs SSH access:
+
+```bash
+server-admin setup-ssh
+```
+
+When run through `sudo`, the invoking user is configured by default. Use
+`--user` when an administrator needs to configure a different account:
+
+```bash
+sudo server-admin setup-ssh \
+  --user viktor.kostadinoski \
+  --host gitlab.finki.ukim.mk \
+  --remote-user git \
+  --alias finki-gitlab \
+  --key-name id_ed25519_finki \
+  --comment finki-gitlab-cluster
+```
+
+To use the standard SSH key filename, omit `--key-name` and accept
+`id_ed25519` at the prompt. For non-interactive automation, provide all values
+and use `--no-passphrase`:
+
+```bash
+sudo server-admin setup-ssh \
+  --user viktor.kostadinoski \
+  --host gpu.example.com \
+  --remote-user viktor \
+  --alias gpu-server \
+  --port 22 \
+  --key-name id_ed25519_gpu \
+  --comment gpu-server-access \
+  --no-passphrase
+```
+
+Options:
+
+- `--user USER` selects the Linux account; the invoking sudo user is the default.
+- `--host HOST` selects the remote hostname or IP address.
+- `--remote-user USER` selects the account on the remote host; the local username is the default.
+- `--alias ALIAS` selects the short name used with `ssh`; the host is the default.
+- `--port PORT` selects the remote SSH port; `22` is the default.
+- `--key-name NAME` selects the filename inside `~/.ssh`; `id_ed25519` is the default.
+- `--comment TEXT` sets the public-key comment.
+- `--no-passphrase` creates the key without an interactive passphrase prompt.
+
+The command never copies a private key from another computer. The generated
+private key remains under the selected user's `~/.ssh` directory. If a complete
+key pair already exists, it is reused; an incomplete pair causes the command to
+stop. Add the displayed `.pub` key to the remote account or service, then test
+using the configured alias. For example:
+
+```bash
+ssh finki-gitlab
+```
 
 Create a user interactively:
 

@@ -8,6 +8,7 @@ cmd=${1:-help}; shift || true
 case "$cmd" in
  add-user) source "$ROOT/lib/add_user.sh"; add_user "$@";;
  disable-cloud-init-ssh) source "$ROOT/lib/disable_cloud_init_ssh.sh"; disable_cloud_init_ssh "$@";;
+ setup-ssh) source "$ROOT/lib/setup_ssh.sh"; setup_ssh "$@";;
  verify-user) source "$ROOT/lib/verify_user.sh"; verify_user "$@";;
  remove-user) source "$ROOT/lib/remove_user.sh"; remove_user "$@";;
  list-users) source "$ROOT/lib/list_users.sh"; list_users;;
@@ -21,6 +22,7 @@ server-admin - Ubuntu GPU server administration
 Usage: server-admin <command> [options]
   add-user [--username NAME] [--sudo|--no-sudo] [--key FILE]
   disable-cloud-init-ssh
+  setup-ssh [options]
   verify-user [NAME|--all]   remove-user [NAME]
   list-users            show-keys
   doctor                info
