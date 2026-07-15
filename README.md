@@ -53,7 +53,7 @@ sudo server-admin add-user --username firstname.lastname --sudo --key ~/Download
 
 ## Commands
 
-- `add-user` creates a public-key-only user, optionally grants sudo, installs the supplied public key, and safely updates `AllowUsers`.
+- `add-user` creates a public-key-only user, optionally grants sudo, adds the user to the `docker` group when available, installs the supplied public key, and safely updates `AllowUsers`.
 - `disable-cloud-init-ssh` disables `/etc/ssh/sshd_config.d/50-cloud-init.conf` when present, so cloud-init does not override SSH policy.
 - `verify-user [NAME]` checks one account, its SSH files, effective `sshd -T` settings, and required services.
 - `verify-user --all` performs the same verification for every regular user (UID 1000–59999).
@@ -63,6 +63,11 @@ sudo server-admin add-user --username firstname.lastname --sudo --key ~/Download
 - `doctor` checks Ubuntu, networking, internet access, SSH, port 22, Tailscale, Docker, CUDA/NVIDIA, storage, memory, and UFW.
 - `info` displays a labeled server inventory including OS, kernel, CPU, memory, disk, GPU, Docker, SSH, Tailscale, UFW, and users.
 - `help` displays the command summary; `version` displays the installed server-admin version.
+
+The Docker group grants access to the Docker daemon and is effectively
+root-equivalent. Only add users to this group if that level of access is
+intended. Users must log out and back in (or start a new login session) before
+their new group membership is available.
 
 Create a user interactively:
 
