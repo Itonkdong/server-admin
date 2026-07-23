@@ -6,7 +6,7 @@ Small, modular administration utility for Ubuntu 24.04+ GPU servers.
 
 ```bash
 sudo apt update
-sudo apt install -y git openssh-server openssh-client curl ufw
+sudo apt install -y git openssh-server openssh-client curl ufw acl
 git clone https://github.com/itonkdong/server-setup-tools.git
 cd server-setup-tools
 sudo ./install.sh
@@ -35,6 +35,7 @@ sudo ./install.sh
 
 ```text
 server-admin add-user [--username NAME] [--sudo|--no-sudo] [--key FILE]
+server-admin create-shared-project [OPTIONS]
 server-admin disable-cloud-init-ssh
 server-admin setup-ssh [OPTIONS]
 server-admin verify-user [NAME]
@@ -55,6 +56,7 @@ sudo server-admin add-user --username firstname.lastname --sudo --key ~/Download
 ## Commands
 
 - `add-user` creates a public-key-only user, optionally grants sudo, adds the user to the `docker` group when available, installs the supplied public key, and safely updates `AllowUsers`.
+- `create-shared-project` creates a shared group and private project directory, adds two or more users, and configures setgid and default ACL inheritance.
 - `disable-cloud-init-ssh` disables `/etc/ssh/sshd_config.d/50-cloud-init.conf` when present, so cloud-init does not override SSH policy.
 - `setup-ssh` generates or reuses an Ed25519 key for a Linux user, configures any remote SSH host or service, fixes ownership and permissions, and prints the public key and next steps.
 - `verify-user [NAME]` checks one account, its SSH files, effective `sshd -T` settings, and required services.
@@ -70,6 +72,41 @@ The Docker group grants access to the Docker daemon and is effectively
 root-equivalent. Only add users to this group if that level of access is
 intended. Users must log out and back in (or start a new login session) before
 their new group membership is available.
+
+### Create a shared project directory
+
+Interactive setup:
+
+```bash
+sudo server-admin create-shared-project
+```
+
+Non-interactive setup:
+
+```bash
+sudo server-admin create-shared-project \
+  --name project-alpha \
+  --group project-alpha \
+  --path /srv/projects/project-alpha \
+  --users viktor.kostadinoski,hristijan.gajdov
+```
+
+You can also repeat `--user`:
+
+```bash
+sudo server-admin create-shared-project \
+  --name project-alpha \
+  --user viktor.kostadinoski \
+  --user hristijan.gajdov
+```
+
+The command is idempotent: an existing group or directory is reused. It makes
+the directory private to its owner and project group, enables setgid so new
+content inherits the project group, and applies default ACLs so group members
+receive read/write access. Users must reconnect after being added to the group.
+
+For source code, separate Git clones are still recommended because concurrent
+work in one Git working tree can produce index locks and conflicting edits.
 
 ### Configure outbound SSH access
 
