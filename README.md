@@ -6,7 +6,7 @@ Small, modular administration utility for Ubuntu 24.04+ GPU servers.
 
 ```bash
 sudo apt update
-sudo apt install -y git openssh-server openssh-client curl ufw acl
+sudo apt install -y git openssh-server openssh-client curl ufw acl ethtool speedtest-cli
 git clone https://github.com/itonkdong/server-setup-tools.git
 cd server-setup-tools
 sudo ./install.sh
@@ -36,14 +36,13 @@ sudo ./install.sh
 ```text
 server-admin add-user [--username NAME] [--sudo|--no-sudo] [--key FILE]
 server-admin create-shared-project [OPTIONS]
-server-admin disable-cloud-init-ssh
 server-admin setup-ssh [OPTIONS]
 server-admin verify-user [NAME]
 server-admin verify-user --all
 server-admin remove-user [NAME]
 server-admin list-users
 server-admin show-keys
-server-admin doctor
+server-admin doctor [--interface IFACE] [--skip-speedtest]
 server-admin info
 ```
 
@@ -57,16 +56,40 @@ sudo server-admin add-user --username firstname.lastname --sudo --key ~/Download
 
 - `add-user` creates a public-key-only user, optionally grants sudo, adds the user to the `docker` group when available, installs the supplied public key, and safely updates `AllowUsers`.
 - `create-shared-project` creates a shared group and private project directory, adds two or more users, and configures setgid and default ACL inheritance.
-- `disable-cloud-init-ssh` disables `/etc/ssh/sshd_config.d/50-cloud-init.conf` when present, so cloud-init does not override SSH policy.
 - `setup-ssh` generates or reuses an Ed25519 key for a Linux user, configures any remote SSH host or service, fixes ownership and permissions, and prints the public key and next steps.
 - `verify-user [NAME]` checks one account, its SSH files, effective `sshd -T` settings, and required services.
 - `verify-user --all` performs the same verification for every regular user (UID 1000–59999).
 - `remove-user [NAME]` confirms deletion, optionally removes the home directory, and removes the account from `AllowUsers`.
 - `list-users` displays regular usernames, UIDs, sudo membership, and login shells in a table.
 - `show-keys` displays each regular user’s authorized-key count and fingerprints using `ssh-keygen -lf`.
-- `doctor` checks Ubuntu, networking, internet access, SSH, port 22, Tailscale, Docker, CUDA/NVIDIA, storage, memory, and UFW.
+- `doctor` checks Ubuntu, networking, negotiated interface speed, actual internet speed, SSH, port 22, Tailscale, Docker, CUDA/NVIDIA, storage, memory, and UFW.
 - `info` displays a labeled server inventory including OS, kernel, CPU, memory, disk, GPU, Docker, SSH, Tailscale, UFW, and users.
 - `help` displays the command summary; `version` displays the installed server-admin version.
+
+### Check network and internet speed
+
+`doctor` uses `eno0` for the negotiated Ethernet link speed by default and
+runs `speedtest-cli --simple` for measured latency, download, and upload speed:
+
+```bash
+sudo server-admin doctor
+```
+
+Select a different interface when necessary:
+
+```bash
+sudo server-admin doctor --interface eno1
+```
+
+Skip the external speed test while retaining the local link check:
+
+```bash
+sudo server-admin doctor --interface eno1 --skip-speedtest
+```
+
+The negotiated speed reported by `ethtool` is the physical link rate between
+the network adapter and switch/router. It is not the same as measured internet
+throughput, which depends on the ISP, route, remote test server, and congestion.
 
 The Docker group grants access to the Docker daemon and is effectively
 root-equivalent. Only add users to this group if that level of access is

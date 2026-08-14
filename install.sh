@@ -2,6 +2,8 @@
 set -Eeuo pipefail
 [[ $EUID -eq 0 ]] || { echo 'Run: sudo ./install.sh' >&2; exit 1; }
 src=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd); install -d -m 755 /opt/server-admin /opt/server-admin/lib
+# Remove modules retired by newer releases before copying current modules.
+rm -f /opt/server-admin/lib/disable_cloud_init_ssh.sh
 cp -a "$src/server-admin" "$src/README.md" /opt/server-admin/
 cp -a "$src/lib/." /opt/server-admin/lib/
 chmod 755 /opt/server-admin/server-admin; chmod 755 /opt/server-admin/lib/*.sh
