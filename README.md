@@ -1,14 +1,14 @@
-# Server Setup Tools
+# Server Admin
 
-Small, modular administration utility for Ubuntu 24.04+ GPU servers.
+Small, modular administration utility for Ubuntu 24.04+ servers.
 
 ## Quick start on a new server
 
 ```bash
 sudo apt update
 sudo apt install -y git openssh-server openssh-client curl ufw acl ethtool speedtest-cli
-git clone https://github.com/itonkdong/server-setup-tools.git
-cd server-setup-tools
+git clone https://github.com/itonkdong/server-admin.git
+cd server-admin
 sudo ./install.sh
 server-admin version
 ```
@@ -26,7 +26,7 @@ The installer copies the application to `/opt/server-admin` and creates
 `/usr/local/bin/server-admin`. Update an existing installation with:
 
 ```bash
-cd server-setup-tools
+cd server-admin
 git pull
 sudo ./install.sh
 ```
